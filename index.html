@@ -57,7 +57,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <span class="font-extrabold text-xl tracking-wider text-white">DUGOUT<span class="text-gold-400">SYNC</span></span>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-brand-700 text-gold-400 font-semibold border border-gold-500/30">v1.1</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-brand-700 text-gold-400 font-semibold border border-gold-500/30">v1.2</span>
                         </div>
                         <p class="text-[11px] text-purple-200/70 hidden sm:block">Real-Time Field Practice Execution System</p>
                     </div>
@@ -211,7 +211,7 @@
                     <h2 class="text-xl font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-user-gear text-gold-400"></i> Personalized Coach Duty View
                     </h2>
-                    <p class="text-xs text-slate-300">Select your name below to view your specific assignments and duties for each segment of practice.</p>
+                    <p class="text-xs text-slate-300">Select your name below to view your specific assignments and private tasks for each segment.</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -306,7 +306,7 @@
                         <h2 class="text-xl font-bold text-white flex items-center gap-2">
                             <i class="fa-solid fa-sliders text-gold-400"></i> Practice Itinerary Builder
                         </h2>
-                        <p class="text-xs text-slate-300">Design drills, assign durations, and delegate coaching responsibilities.</p>
+                        <p class="text-xs text-slate-300">Design drills, assign durations, and delegate private coaching tasks.</p>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
@@ -343,7 +343,7 @@
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-users-gear text-gold-400"></i> Active Coaching Staff Roster
                     </h3>
-                    <p class="text-xs text-slate-400">Coaches added here can be assigned to individual drills.</p>
+                    <p class="text-xs text-slate-400">Coaches added here can be assigned individual tasks for each drill segment.</p>
                 </div>
                 <div class="flex items-center gap-2 w-full md:w-auto">
                     <input type="text" id="new-coach-name" placeholder="Coach Name (e.g., Coach Alex)" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-gold-400 flex-1 md:w-48">
@@ -746,7 +746,6 @@
             const initials = currentCoach.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
             document.getElementById('selected-coach-initials').innerText = initials || 'CO';
 
-            // Focus View UI Toggle state
             const banner = document.getElementById('coach-focus-banner');
             const focusBtnText = document.getElementById('focus-btn-text');
             const focusIcon = document.getElementById('focus-icon');
@@ -771,7 +770,6 @@
                 const isAssigned = activeDrill.assignedCoachIds.includes(currentCoach.id);
                 document.getElementById('duty-active-title').innerText = activeDrill.name;
                 
-                // Retrieve coach-specific note if available, otherwise general notes if assigned
                 const specificNote = activeDrill.coachNotes && activeDrill.coachNotes[currentCoach.id];
                 document.getElementById('duty-active-desc').innerText = isAssigned 
                     ? (specificNote || activeDrill.notes || "Assigned lead role for this drill segment.")
@@ -785,7 +783,6 @@
             const timelineContainer = document.getElementById('coach-timeline-container');
             timelineContainer.innerHTML = '';
 
-            // Filter drills if Coach Focus Mode is active
             const drillsToDisplay = appState.coachFocusMode 
                 ? appState.drills.map((drill, idx) => ({ drill, idx })).filter(({ drill }) => drill.assignedCoachIds.includes(currentCoach.id))
                 : appState.drills.map((drill, idx) => ({ drill, idx }));
@@ -812,7 +809,6 @@
             drillsToDisplay.forEach(({ drill, idx }) => {
                 const isAssigned = drill.assignedCoachIds.includes(currentCoach.id);
                 const specificNote = drill.coachNotes && drill.coachNotes[currentCoach.id];
-                // In Focus View, hide general notes and show ONLY the coach's specific task note
                 const displayedNote = appState.coachFocusMode 
                     ? (specificNote || "No specific task instructions assigned for this drill.")
                     : (specificNote ? `Your Task: ${specificNote}` : (drill.notes || 'No extra notes.'));
@@ -1083,7 +1079,7 @@
                 const label = document.createElement('label');
                 label.className = "flex items-center gap-2 text-xs text-slate-200 cursor-pointer hover:text-white";
                 label.innerHTML = `
-                    <input type="checkbox" value="${coach.id}" ${isChecked ? 'checked' : ''} onchange="updateCoachTaskInputsVisibility()" class="rounded border-slate-700 text-gold-500 focus:ring-gold-400 bg-slate-900">
+                    <input type="checkbox" value="${coach.id}" ${isChecked ? 'checked' : ''} class="rounded border-slate-700 text-gold-500 focus:ring-gold-400 bg-slate-900">
                     <span>${escapeHTML(coach.name)} <span class="text-purple-300/60">(${escapeHTML(coach.role)})</span></span>
                 `;
                 container.appendChild(label);
@@ -1105,10 +1101,6 @@
                 `;
                 container.appendChild(div);
             });
-        }
-
-        function updateCoachTaskInputsVisibility() {
-            // Dynamic helper if needed
         }
 
         function saveDrill(e) {
