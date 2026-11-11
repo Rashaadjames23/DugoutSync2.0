@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DugoutSync - Practice Planner & Real-Time Drill Manager</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            900: '#2e0754',
+                            800: '#3b0764',
+                            700: '#581c87',
+                            600: '#7e22ce',
+                            500: '#9333ea',
+                        },
+                        gold: {
+                            400: '#facc15',
+                            500: '#eab308',
+                            600: '#ca8a04',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e1b4b; }
+        ::-webkit-scrollbar-thumb { background: #581c87; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7e22ce; }
+        .gold-glow { box-shadow: 0 0 20px rgba(250, 204, 21, 0.25); }
+        .purple-glow { box-shadow: 0 0 25px rgba(126, 34, 206, 0.35); }
+    </style>
+</head>
+<body class="h-full flex flex-col bg-slate-950 text-slate-100 overflow-x-hidden selection:bg-gold-500 selection:text-brand-900">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-brand-900 border-b border-brand-700/50 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Brand & Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-gold-500 to-gold-400 text-brand-900 flex items-center justify-center font-extrabold text-xl shadow-md">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-extrabold text-xl tracking-wider text-white">DUGOUT<span class="text-gold-400">SYNC</span></span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-brand-700 text-gold-400 font-semibold border border-gold-500/30">v1.0</span>
+                        </div>
+                        <p class="text-[11px] text-purple-200/70 hidden sm:block">Real-Time Field Practice Execution System</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex items-center gap-1 bg-brand-800/80 p-1 rounded-xl border border-brand-700/50">
+                    <button onclick="switchTab('timer')" id="nav-btn-timer" class="px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-gradient-to-r from-gold-500 to-gold-400 text-brand-900 shadow">
+                        <i class="fa-solid fa-stopwatch"></i> Field Execution Timer
+                    </button>
+                    <button onclick="switchTab('coach')" id="nav-btn-coach" class="px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-purple-200 hover:text-white hover:bg-brand-700/50">
+                        <i class="fa-solid fa-user-shield"></i> Coach Duty Roster
+                    </button>
+                    <button onclick="switchTab('builder')" id="nav-btn-builder" class="px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-purple-200 hover:text-white hover:bg-brand-700/50">
+                        <i class="fa-solid fa-sliders"></i> Plan Builder
+                    </button>
+                </nav>
+
+                <!-- Action Controls & Sync Status -->
+                <div class="flex items-center gap-2">
+                    <!-- Live Sync Indicator -->
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium">
+                        <span id="sync-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="sync-status" class="text-slate-300 hidden sm:inline">Synced</span>
+                    </div>
+
+                    <!-- Settings Button -->
+                    <button onclick="openModal('settings-modal')" class="p-2.5 rounded-lg bg-brand-800/80 hover:bg-brand-700 text-purple-200 hover:text-gold-400 transition border border-brand-700/40" title="Sync & Cloud Settings">
+                        <i class="fa-solid fa-gear text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Bar -->
+        <div class="md:hidden flex border-t border-brand-800 bg-brand-900/90 text-xs">
+            <button onclick="switchTab('timer')" id="mob-nav-timer" class="flex-1 py-3 text-center font-bold text-gold-400 border-b-2 border-gold-400">
+                <i class="fa-solid fa-stopwatch block text-base mb-0.5"></i> Timer
+            </button>
+            <button onclick="switchTab('coach')" id="mob-nav-coach" class="flex-1 py-3 text-center font-semibold text-purple-200 border-b-2 border-transparent">
+                <i class="fa-solid fa-user-shield block text-base mb-0.5"></i> Coach Roster
+            </button>
+            <button onclick="switchTab('builder')" id="mob-nav-builder" class="flex-1 py-3 text-center font-semibold text-purple-200 border-b-2 border-transparent">
+                <i class="fa-solid fa-sliders block text-base mb-0.5"></i> Builder
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+        <!-- ================= TAB 1: FIELD EXECUTION & TIMER ================= -->
+        <section id="tab-timer" class="space-y-6">
+            
+            <!-- Global Practice Control Banner -->
+            <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 border border-brand-700/60 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-gold-400 pointer-events-none">
+                    <i class="fa-solid fa-baseball text-9xl"></i>
+                </div>
+                
+                <div class="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10">
+                    <div>
+                        <div class="flex items-center gap-3 mb-1">
+                            <h1 id="practice-title-display" class="text-2xl sm:text-3xl font-black text-white">Varsity Field Practice Plan</h1>
+                            <span id="practice-date-badge" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-brand-700 text-purple-200">Today</span>
+                        </div>
+                        <p id="practice-notes-display" class="text-slate-300 text-sm max-w-2xl">High intensity rep training. Focus on quick transitions between infield cutoff drills and bullpen rotations.</p>
+                    </div>
+
+                    <!-- Master Play / Pause / Reset Controls -->
+                    <div class="flex items-center gap-3 w-full lg:w-auto justify-center bg-slate-950/60 p-3 rounded-xl border border-brand-700/40 backdrop-blur">
+                        <button id="btn-timer-prev" onclick="jumpSegment(-1)" class="p-3 bg-brand-800 hover:bg-brand-700 text-slate-200 rounded-lg transition active:scale-95">
+                            <i class="fa-solid fa-backward-step text-lg"></i>
+                        </button>
+                        <button id="btn-timer-toggle" onclick="toggleTimer()" class="px-6 py-3 bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-400 hover:to-gold-500 text-brand-900 font-black rounded-lg transition transform active:scale-95 shadow-lg flex items-center gap-2 text-base">
+                            <i id="btn-timer-icon" class="fa-solid fa-play"></i>
+                            <span id="btn-timer-text">START DRILL</span>
+                        </button>
+                        <button id="btn-timer-next" onclick="jumpSegment(1)" class="p-3 bg-brand-800 hover:bg-brand-700 text-slate-200 rounded-lg transition active:scale-95">
+                            <i class="fa-solid fa-forward-step text-lg"></i>
+                        </button>
+                        <button onclick="resetCurrentSegment()" class="p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition active:scale-95" title="Reset Current Drill Timer">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Segment Timer Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Main Timer Hero (2 Cols) -->
+                <div class="lg:col-span-2 bg-brand-900/60 border border-brand-700/50 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center shadow-2xl relative overflow-hidden">
+                    <div class="w-full flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300 mb-4 border-b border-brand-700/40 pb-3">
+                        <span class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>
+                            ACTIVE DRILL SEGMENT
+                        </span>
+                        <span>Overall Practice: <strong id="total-elapsed-display" class="text-gold-400 font-mono text-sm">00:00</strong></span>
+                    </div>
+
+                    <!-- Current Segment Title & Category -->
+                    <div class="mb-6">
+                        <span id="active-drill-category" class="px-3 py-1 bg-gold-500/10 text-gold-400 text-xs font-bold uppercase rounded-full border border-gold-500/30">
+                            Warm-Up Phase
+                        </span>
+                        <h2 id="active-drill-name" class="text-3xl sm:text-5xl font-black text-white tracking-tight mt-3">Dynamic Warmup & Throwing Program</h2>
+                    </div>
+
+                    <!-- Giant Countdown Timer Display -->
+                    <div class="my-4 relative">
+                        <div id="segment-timer-display" class="text-6xl sm:text-8xl font-black font-mono tracking-wider text-gold-400 gold-glow px-8 py-4 bg-slate-950/80 rounded-3xl border-2 border-gold-500/40 inline-block transition-colors">
+                            10:00
+                        </div>
+                    </div>
+
+                    <!-- Audio / Sound Toggle -->
+                    <div class="flex items-center gap-4 mt-4">
+                        <button onclick="toggleAudioAlert()" id="btn-audio-toggle" class="text-xs flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-800 text-purple-200 border border-brand-700 hover:text-white">
+                            <i class="fa-solid fa-volume-high text-gold-400"></i>
+                            <span id="audio-toggle-text">Sound: ON</span>
+                        </button>
+                        <span class="text-xs text-slate-400">Audio buzz on drill complete</span>
+                    </div>
+
+                    <!-- Active Drill Assigned Coaches List -->
+                    <div class="mt-8 w-full bg-slate-950/40 rounded-xl p-4 border border-brand-700/30 text-left">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-users text-gold-400"></i> Assigned Coaches for this Drill:
+                        </h4>
+                        <div id="active-drill-coaches-list" class="flex flex-wrap gap-2">
+                            <!-- Dynamic Badges Inserted Here -->
+                        </div>
+                        <div class="mt-3 text-xs text-slate-300 italic bg-brand-800/40 p-2.5 rounded-lg border border-brand-700/30" id="active-drill-instructions">
+                            Focus on arm path mechanics during light throwing at 60 feet.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar: Complete Practice Itinerary -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col h-[520px]">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <h3 class="font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-gold-400"></i> Practice Schedule
+                        </h3>
+                        <span id="drill-count-badge" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded">0 Drills</span>
+                    </div>
+
+                    <!-- Drill List -->
+                    <div id="itinerary-list-container" class="flex-1 overflow-y-auto my-3 space-y-2 pr-1">
+                        <!-- Dynamic Itinerary Items -->
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-800 text-xs text-slate-400 flex justify-between">
+                        <span>Total Practice Time:</span>
+                        <strong id="total-plan-duration" class="text-white">0 min</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: COACH DUTY ROSTER & ASSIGNMENTS ================= -->
+        <section id="tab-coach" class="hidden space-y-6">
+            
+            <!-- Coach Filter Selector Bar -->
+            <div class="bg-brand-900/80 border border-brand-700/50 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-gear text-gold-400"></i> Personalized Coach Duty View
+                    </h2>
+                    <p class="text-xs text-slate-300">Select your name below to view your specific assignments and duties for each segment of practice.</p>
+                </div>
+
+                <!-- Select Coach Dropdown & Dynamic Quick Buttons -->
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <label for="coach-select" class="text-xs font-semibold text-slate-400 uppercase tracking-wider hidden">Coach:</label>
+                    <select id="coach-select" onchange="selectCoach(this.value)" class="bg-slate-950 border border-brand-600 text-gold-400 font-bold text-base rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-gold-400 w-full md:w-64">
+                        <!-- Dynamic Coach Options -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Coach Duty Overview Cards -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Left: Selected Coach Current Status Card -->
+                <div class="bg-gradient-to-b from-brand-900 to-slate-900 border border-brand-700/60 rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center gap-4 border-b border-brand-700/40 pb-4 mb-4">
+                        <div class="w-14 h-14 rounded-2xl bg-gold-400 text-brand-900 flex items-center justify-center text-2xl font-black shadow">
+                            <span id="selected-coach-initials">CR</span>
+                        </div>
+                        <div>
+                            <h3 id="selected-coach-name" class="text-xl font-extrabold text-white">Coach Rashaad</h3>
+                            <p id="selected-coach-role" class="text-xs text-gold-400 font-medium">Head Coach / Infield Lead</p>
+                        </div>
+                    </div>
+
+                    <!-- Current Duty Quick Card -->
+                    <div class="bg-slate-950/80 rounded-xl p-4 border border-brand-600/40 space-y-3">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span class="uppercase font-bold tracking-wider">CURRENT ASSIGNMENT</span>
+                            <span id="duty-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">ACTIVE NOW</span>
+                        </div>
+                        <h4 id="duty-active-title" class="font-bold text-base text-white">Dynamic Warmup & Throwing</h4>
+                        <p id="duty-active-desc" class="text-xs text-slate-300 leading-relaxed">Lead outfielders in dynamic stretching. Monitor throwing form from 90 ft distance.</p>
+                        
+                        <!-- Duty Status Buttons -->
+                        <div class="pt-2 flex items-center gap-2">
+                            <button onclick="updateDutyStatus('Ready')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg transition border border-slate-700">
+                                <i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Ready
+                            </button>
+                            <button onclick="updateDutyStatus('In Progress')" class="flex-1 py-2 bg-gold-500/20 hover:bg-gold-500/30 text-gold-400 text-xs font-bold rounded-lg transition border border-gold-500/40">
+                                <i class="fa-solid fa-spinner animate-spin mr-1"></i> In Progress
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 text-xs text-purple-200/80 space-y-2">
+                        <div class="flex justify-between py-1 border-b border-brand-800">
+                            <span>Assigned Drills Today:</span>
+                            <strong id="coach-total-drills-count" class="text-gold-400">4 Drills</strong>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-brand-800">
+                            <span>Total Coaching Time:</span>
+                            <strong id="coach-total-time" class="text-gold-400">65 mins</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Full Timeline Breakdown for Selected Coach -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-3">
+                        <i class="fa-solid fa-timeline text-gold-400"></i>
+                        Full Practice Duty Timeline for <span id="timeline-coach-name" class="text-gold-400">Coach Rashaad</span>
+                    </h3>
+
+                    <div id="coach-timeline-container" class="space-y-4">
+                        <!-- Dynamic Timeline Card Items -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: PRACTICE PLAN BUILDER ================= -->
+        <section id="tab-builder" class="hidden space-y-6">
+            
+            <!-- Builder Control & Plan Meta -->
+            <div class="bg-brand-900/80 border border-brand-700/50 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-gold-400"></i> Practice Itinerary Builder
+                        </h2>
+                        <p class="text-xs text-slate-300">Design drills, assign durations, and delegate coaching responsibilities.</p>
+                    </div>
+
+                    <!-- Presets & Actions -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="loadTemplate('default')" class="px-3 py-2 bg-brand-800 hover:bg-brand-700 text-purple-200 text-xs font-semibold rounded-lg border border-brand-600 transition">
+                            <i class="fa-solid fa-wand-magic-sparkles text-gold-400 mr-1"></i> Load Standard Preset
+                        </button>
+                        <button onclick="clearPlan()" class="px-3 py-2 bg-rose-950/60 hover:bg-rose-900 text-rose-300 text-xs font-semibold rounded-lg border border-rose-800/50 transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Reset Plan
+                        </button>
+                        <button onclick="openModal('add-drill-modal')" class="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-brand-900 font-bold text-xs rounded-lg transition shadow-md flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Add New Drill Segment
+                        </button>
+                    </div>
+                </div>
+
+                <!-- General Practice Details Form -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-brand-800/80">
+                    <div>
+                        <label class="block text-xs font-medium text-purple-200 mb-1">Practice Title</label>
+                        <input type="text" id="plan-title-input" oninput="updatePlanMeta()" value="Varsity Field Practice Plan" class="w-full bg-slate-950 border border-brand-700 text-white rounded-lg px-3 py-2 text-sm focus:border-gold-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-purple-200 mb-1">Date / Event</label>
+                        <input type="text" id="plan-date-input" oninput="updatePlanMeta()" value="Spring Training - Day 14" class="w-full bg-slate-950 border border-brand-700 text-white rounded-lg px-3 py-2 text-sm focus:border-gold-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-purple-200 mb-1">Overall Focus / Notes</label>
+                        <input type="text" id="plan-notes-input" oninput="updatePlanMeta()" value="High intensity rep training. Focus on quick transitions between infield cutoff drills." class="w-full bg-slate-950 border border-brand-700 text-white rounded-lg px-3 py-2 text-sm focus:border-gold-400 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registered Coaches Management Bar -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-gold-400"></i> Active Coaching Staff Roster
+                    </h3>
+                    <p class="text-xs text-slate-400">Coaches added here can be assigned to individual drills.</p>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <input type="text" id="new-coach-name" placeholder="Coach Name (e.g., Coach Alex)" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-gold-400 flex-1 md:w-48">
+                    <input type="text" id="new-coach-role" placeholder="Role (e.g. Pitching)" class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 outline-none focus:border-gold-400 flex-1 md:w-36">
+                    <button onclick="addNewCoach()" class="px-3 py-2 bg-brand-700 hover:bg-brand-600 text-gold-400 font-semibold text-xs rounded-lg border border-brand-500/40 transition shrink-0">
+                        <i class="fa-solid fa-user-plus mr-1"></i> Add Coach
+                    </button>
+                </div>
+            </div>
+
+            <!-- Re-orderable Drills Table / List -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <h3 class="text-base font-bold text-white flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span>Drill Segments Sequence</span>
+                    <span id="builder-total-duration" class="text-xs font-normal text-gold-400 bg-brand-900 px-3 py-1 rounded-full border border-brand-700">Total Duration: 0 mins</span>
+                </h3>
+
+                <div id="builder-drills-list" class="space-y-3">
+                    <!-- Dynamic Drill Cards in Builder -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Add / Edit Drill Modal -->
+    <div id="add-drill-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-brand-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 id="modal-drill-title" class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-stopwatch text-gold-400"></i> Add New Drill Segment
+                </h3>
+                <button onclick="closeModal('add-drill-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form id="drill-form" onsubmit="saveDrill(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="edit-drill-id" value="">
+                
+                <div>
+                    <label class="block font-semibold text-purple-200 mb-1">Drill / Segment Name *</label>
+                    <input type="text" id="drill-name-input" required placeholder="e.g., Infield Cutoffs & Relays" class="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:border-gold-400 outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-purple-200 mb-1">Duration (Minutes) *</label>
+                        <input type="number" id="drill-duration-input" required min="1" max="180" value="15" class="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:border-gold-400 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-purple-200 mb-1">Category / Tag</label>
+                        <select id="drill-category-input" class="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:border-gold-400 outline-none">
+                            <option value="Warmup">Warmup</option>
+                            <option value="Infield/Outfield">Infield/Outfield</option>
+                            <option value="Batting Practice">Batting Practice</option>
+                            <option value="Bullpen">Bullpen</option>
+                            <option value="Conditioning">Conditioning</option>
+                            <option value="Tactical / Team">Tactical / Team</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-purple-200 mb-1">Assigned Coach(es)</label>
+                    <div id="drill-coaches-checkboxes" class="bg-slate-950 border border-slate-700 rounded-lg p-3 max-h-32 overflow-y-auto space-y-2">
+                        <!-- Dynamic Checkboxes -->
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-purple-200 mb-1">Detailed Coach Responsibilities / Notes</label>
+                    <textarea id="drill-notes-input" rows="3" placeholder="Specify instructions for each coach during this drill..." class="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:border-gold-400 outline-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-800">
+                    <button type="button" onclick="closeModal('add-drill-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-gold-500 hover:bg-gold-400 text-brand-900 font-bold rounded-lg shadow">Save Drill</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sync & Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-brand-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-gold-400"></i> Settings & Live Multi-Device Sync
+                </h3>
+                <button onclick="closeModal('settings-modal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <!-- Data Export / Import for Offline & GitHub Pages -->
+            <div class="space-y-2 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <h4 class="text-xs font-bold text-gold-400 uppercase tracking-wider">Manual Data Backup & GitHub Pages Sync</h4>
+                <p class="text-xs text-slate-300">Export your complete practice plan to JSON file or import a saved itinerary from another coach.</p>
+                <div class="flex items-center gap-2 pt-2">
+                    <button onclick="exportDataJSON()" class="flex-1 py-2 bg-brand-800 hover:bg-brand-700 text-purple-200 text-xs font-bold rounded-lg border border-brand-600">
+                        <i class="fa-solid fa-download mr-1"></i> Export JSON
+                    </button>
+                    <label class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg border border-slate-700 text-center cursor-pointer">
+                        <i class="fa-solid fa-upload mr-1"></i> Import JSON
+                        <input type="file" id="import-file-input" onchange="importDataJSON(event)" class="hidden" accept=".json">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Google Sheets Web App Endpoint Integration -->
+            <div class="space-y-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <h4 class="text-xs font-bold text-gold-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>Google Sheets / Web App Live Sync Endpoint</span>
+                    <span class="text-[10px] text-purple-300 font-normal">Optional</span>
+                </h4>
+                <p class="text-xs text-slate-300">Paste your deployed Google Apps Script Web App URL below to sync active drill progress live across remote mobile browsers.</p>
+                
+                <input type="url" id="gas-endpoint-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 text-xs text-white rounded-lg p-2.5 outline-none focus:border-gold-400">
+                
+                <div class="flex items-center justify-between text-xs">
+                    <button onclick="saveGasEndpoint()" class="px-3 py-1.5 bg-gold-500 hover:bg-gold-400 text-brand-900 font-bold rounded-lg">
+                        Save Endpoint URL
+                    </button>
+                    <button onclick="testSyncEndpoint()" class="text-purple-300 hover:text-white underline">
+                        Test Connection
+                    </button>
+                </div>
+            </div>
+
+            <!-- BroadcastChannel Multi-Tab Info -->
+            <div class="text-xs text-slate-400 bg-brand-950/40 p-3 rounded-lg border border-brand-800">
+                <i class="fa-solid fa-circle-info text-gold-400 mr-1"></i> <strong>Multi-Tab Sync Active:</strong> Open this app in multiple tabs on the same device to see instant timer & status synchronization via standard HTML5 BroadcastChannel APIs.
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button onclick="closeModal('settings-modal')" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Box -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- MAIN JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        /**
+         * DugoutSync Application State Structure
+         */
+        let appState = {
+            planMeta: {
+                title: "Varsity Field Practice Plan",
+                date: "Today - Spring Training",
+                notes: "High intensity rep training. Focus on quick transitions between infield cutoff drills and bullpen rotations."
+            },
+            coaches: [
+                { id: "c1", name: "Coach Rashaad", role: "Head Coach / Infield" },
+                { id: "c2", name: "Coach Alex", role: "Pitching Coach" },
+                { id: "c3", name: "Coach Sam", role: "Hitting & Outfield" }
+            ],
+            drills: [
+                {
+                    id: "d1",
+                    name: "Dynamic Warmup & Throwing Program",
+                    duration: 10,
+                    category: "Warmup",
+                    assignedCoachIds: ["c1", "c3"],
+                    notes: "Lead outfielders & infielders in dynamic stretching. Monitor throwing mechanics from 60 ft to 120 ft cutoff position.",
+                    status: "Completed"
+                },
+                {
+                    id: "d2",
+                    name: "Infield Cutoffs & Double Play Relays",
+                    duration: 15,
+                    category: "Infield/Outfield",
+                    assignedCoachIds: ["c1", "c2"],
+                    notes: "Coach Rashaad hits grounders to 2B/SS. Coach Alex handles cutoff positioning from deep right center.",
+                    status: "In Progress"
+                },
+                {
+                    id: "d3",
+                    name: "Batting Practice Rotations & Bunting",
+                    duration: 20,
+                    category: "Batting Practice",
+                    assignedCoachIds: ["c3"],
+                    notes: "Group A in cage 1 for directional bunting. Group B on main field taking 10-pitch live BP rounds.",
+                    status: "Ready"
+                },
+                {
+                    id: "d4",
+                    name: "Bullpen Work & Pitch Counts",
+                    duration: 15,
+                    category: "Bullpen",
+                    assignedCoachIds: ["c2"],
+                    notes: "Coach Alex tracks pitch counts and fast-ball command for starter group (25 pitches max per pitcher).",
+                    status: "Ready"
+                }
+            ],
+            selectedCoachId: "c1",
+            activeDrillIndex: 1,
+            timer: {
+                isRunning: false,
+                remainingSeconds: 15 * 60,
+                totalElapsedSeconds: 600, // 10 mins elapsed from drill 1
+                soundEnabled: true,
+                gasEndpoint: ""
+            }
+        };
+
+        // Broadcast Channel for Instant Multi-Tab Browser Synchronization
+        const syncChannel = new BroadcastChannel('dugout_sync_channel');
+        let timerInterval = null;
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLocalData();
+            initBroadcastListeners();
+            renderAllViews();
+            
+            // Web Audio Context setup
+            initAudioContext();
+        });
+
+        /* ================= BROADCAST & LOCAL STORAGE SYNC ================= */
+
+        function loadLocalData() {
+            const saved = localStorage.getItem('dugout_sync_data');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    appState = { ...appState, ...parsed };
+                } catch (e) {
+                    console.error("Failed to parse local storage", e);
+                }
+            }
+        }
+
+        function saveData(broadcast = true) {
+            localStorage.setItem('dugout_sync_data', JSON.stringify(appState));
+            if (broadcast) {
+                syncChannel.postMessage({ type: 'STATE_UPDATE', payload: appState });
+            }
+        }
+
+        function initBroadcastListeners() {
+            syncChannel.onmessage = (event) => {
+                if (event.data && event.data.type === 'STATE_UPDATE') {
+                    appState = event.data.payload;
+                    renderAllViews();
+                } else if (event.data && event.data.type === 'TIMER_TICK') {
+                    appState.timer.remainingSeconds = event.data.remaining;
+                    appState.timer.totalElapsedSeconds = event.data.elapsed;
+                    updateTimerDOM();
+                }
+            };
+        }
+
+        /* ================= RENDERING ENGINE ================= */
+
+        function renderAllViews() {
+            renderPlanHeader();
+            renderTimerSection();
+            renderItineraryList();
+            renderCoachSection();
+            renderBuilderList();
+        }
+
+        function renderPlanHeader() {
+            document.getElementById('practice-title-display').innerText = appState.planMeta.title;
+            document.getElementById('practice-date-badge').innerText = appState.planMeta.date;
+            document.getElementById('practice-notes-display').innerText = appState.planMeta.notes;
+            
+            // Builder Form Inputs
+            document.getElementById('plan-title-input').value = appState.planMeta.title;
+            document.getElementById('plan-date-input').value = appState.planMeta.date;
+            document.getElementById('plan-notes-input').value = appState.planMeta.notes;
+            document.getElementById('gas-endpoint-url').value = appState.timer.gasEndpoint || '';
+        }
+
+        function renderTimerSection() {
+            if (appState.drills.length === 0) {
+                document.getElementById('active-drill-name').innerText = "No Drills Added";
+                document.getElementById('active-drill-category').innerText = "EMPTY PLAN";
+                document.getElementById('segment-timer-display').innerText = "00:00";
+                document.getElementById('active-drill-coaches-list').innerHTML = `<span class="text-slate-400 italic text-xs">No assignments</span>`;
+                document.getElementById('active-drill-instructions').innerText = "Add drill segments in the Plan Builder tab.";
+                return;
+            }
+
+            const activeDrill = appState.drills[appState.activeDrillIndex] || appState.drills[0];
+            document.getElementById('active-drill-name').innerText = activeDrill.name;
+            document.getElementById('active-drill-category').innerText = activeDrill.category;
+            document.getElementById('active-drill-instructions').innerText = activeDrill.notes || "No extra instructions provided.";
+
+            // Render Assigned Coach Badges for Active Drill
+            const coachBadges = activeDrill.assignedCoachIds.map(id => {
+                const coach = appState.coaches.find(c => c.id === id);
+                if (!coach) return '';
+                return `<span class="px-2.5 py-1 rounded-md bg-brand-700 text-gold-400 font-bold text-xs flex items-center gap-1 border border-gold-500/30">
+                            <i class="fa-solid fa-user-shield text-[10px]"></i> ${escapeHTML(coach.name)}
+                        </span>`;
+            }).join('');
+            
+            document.getElementById('active-drill-coaches-list').innerHTML = coachBadges || `<span class="text-slate-400 italic text-xs">Unassigned</span>`;
+            
+            updateTimerDOM();
+        }
+
+        function updateTimerDOM() {
+            const mins = Math.floor(appState.timer.remainingSeconds / 60);
+            const secs = appState.timer.remainingSeconds % 60;
+            const timerEl = document.getElementById('segment-timer-display');
+            timerEl.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            // Pulse red visual cue if under 1 minute
+            if (appState.timer.remainingSeconds <= 60 && appState.timer.remainingSeconds > 0) {
+                timerEl.classList.add('text-rose-400', 'border-rose-500');
+                timerEl.classList.remove('text-gold-400', 'border-gold-500/40');
+            } else {
+                timerEl.classList.remove('text-rose-400', 'border-rose-500');
+                timerEl.classList.add('text-gold-400', 'border-gold-500/40');
+            }
+
+            // Elapsed Timer Format
+            const elMins = Math.floor(appState.timer.totalElapsedSeconds / 60);
+            const elSecs = appState.timer.totalElapsedSeconds % 60;
+            document.getElementById('total-elapsed-display').innerText = `${String(elMins).padStart(2, '0')}:${String(elSecs).padStart(2, '0')}`;
+
+            // Play/Pause Button Visuals
+            const btnIcon = document.getElementById('btn-timer-icon');
+            const btnText = document.getElementById('btn-timer-text');
+            if (appState.timer.isRunning) {
+                btnIcon.className = 'fa-solid fa-pause';
+                btnText.innerText = 'PAUSE DRILL';
+            } else {
+                btnIcon.className = 'fa-solid fa-play';
+                btnText.innerText = 'START DRILL';
+            }
+        }
+
+        function renderItineraryList() {
+            const container = document.getElementById('itinerary-list-container');
+            container.innerHTML = '';
+            let totalMins = 0;
+
+            appState.drills.forEach((drill, index) => {
+                totalMins += parseInt(drill.duration) || 0;
+                const isActive = index === appState.activeDrillIndex;
+                
+                const card = document.createElement('div');
+                card.onclick = () => selectActiveSegment(index);
+                card.className = `p-3 rounded-xl cursor-pointer transition flex items-center justify-between border ${
+                    isActive 
+                        ? 'bg-brand-900/90 border-gold-400 shadow-md' 
+                        : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-full ${isActive ? 'bg-gold-400 text-brand-900' : 'bg-slate-800 text-slate-300'} text-xs font-black flex items-center justify-center shrink-0">
+                            ${index + 1}
+                        </span>
+                        <div>
+                            <h4 class="text-xs font-bold ${isActive ? 'text-white' : 'text-slate-300'} line-clamp-1">${escapeHTML(drill.name)}</h4>
+                            <p class="text-[10px] text-purple-300/70">${escapeHTML(drill.category)} • ${drill.duration} min</p>
+                        </div>
+                    </div>
+                    <div>
+                        ${getStatusBadgeHTML(drill.status)}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('drill-count-badge').innerText = `${appState.drills.length} Drills`;
+            document.getElementById('total-plan-duration').innerText = `${totalMins} mins`;
+            document.getElementById('builder-total-duration').innerText = `Total Duration: ${totalMins} mins`;
+        }
+
+        function renderCoachSection() {
+            const selectEl = document.getElementById('coach-select');
+            selectEl.innerHTML = '';
+
+            appState.coaches.forEach(coach => {
+                const opt = document.createElement('option');
+                opt.value = coach.id;
+                opt.innerText = `${coach.name} (${coach.role})`;
+                if (coach.id === appState.selectedCoachId) opt.selected = true;
+                selectEl.appendChild(opt);
+            });
+
+            const currentCoach = appState.coaches.find(c => c.id === appState.selectedCoachId) || appState.coaches[0];
+            if (!currentCoach) return;
+
+            // Render Coach Meta
+            document.getElementById('selected-coach-name').innerText = currentCoach.name;
+            document.getElementById('selected-coach-role').innerText = currentCoach.role;
+            document.getElementById('timeline-coach-name').innerText = currentCoach.name;
+            
+            // Get Initials
+            const initials = currentCoach.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            document.getElementById('selected-coach-initials').innerText = initials || 'CO';
+
+            // Active Drill Duty Status for Coach
+            const activeDrill = appState.drills[appState.activeDrillIndex];
+            if (activeDrill) {
+                const isAssigned = activeDrill.assignedCoachIds.includes(currentCoach.id);
+                document.getElementById('duty-active-title').innerText = activeDrill.name;
+                document.getElementById('duty-active-desc').innerText = isAssigned 
+                    ? activeDrill.notes || "Assigned lead role for this drill segment."
+                    : "No primary assignment for this active segment. Available for floating assistance.";
+                
+                document.getElementById('duty-status-badge').innerText = isAssigned ? "ASSIGNED NOW" : "SUPPORT ROLE";
+            }
+
+            // Calculate Coach Metrics & Timeline
+            let assignedCount = 0;
+            let assignedTime = 0;
+            const timelineContainer = document.getElementById('coach-timeline-container');
+            timelineContainer.innerHTML = '';
+
+            appState.drills.forEach((drill, idx) => {
+                const isAssigned = drill.assignedCoachIds.includes(currentCoach.id);
+                if (isAssigned) {
+                    assignedCount++;
+                    assignedTime += parseInt(drill.duration) || 0;
+                }
+
+                const item = document.createElement('div');
+                item.className = `p-4 rounded-xl border transition ${
+                    isAssigned 
+                        ? 'bg-brand-900/40 border-brand-700/60' 
+                        : 'bg-slate-950/40 border-slate-800/60 opacity-60'
+                }`;
+
+                item.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-start gap-3">
+                            <span class="mt-0.5 px-2 py-1 rounded bg-slate-800 text-gold-400 font-mono text-xs font-bold">
+                                Segment ${idx + 1}
+                            </span>
+                            <div>
+                                <h4 class="text-sm font-bold text-white">${escapeHTML(drill.name)} (${drill.duration} min)</h4>
+                                <p class="text-xs text-purple-200 mt-1">${escapeHTML(drill.notes || 'No extra notes.')}</p>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            ${isAssigned 
+                                ? `<span class="px-2 py-1 rounded-md text-[10px] font-extrabold bg-gold-500/20 text-gold-400 border border-gold-500/30"><i class="fa-solid fa-check mr-1"></i> ASSIGNED</span>`
+                                : `<span class="px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-400">Off-duty / Standby</span>`
+                            }
+                        </div>
+                    </div>
+                `;
+                timelineContainer.appendChild(item);
+            });
+
+            document.getElementById('coach-total-drills-count').innerText = `${assignedCount} Drills`;
+            document.getElementById('coach-total-time').innerText = `${assignedTime} mins`;
+        }
+
+        function renderBuilderList() {
+            const container = document.getElementById('builder-drills-list');
+            container.innerHTML = '';
+
+            if (appState.drills.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 border-2 border-dashed border-slate-800 rounded-xl">
+                        <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-600 block"></i>
+                        No drill segments created yet. Click "Add New Drill Segment" above to start building.
+                    </div>`;
+                return;
+            }
+
+            appState.drills.forEach((drill, index) => {
+                const coachNames = drill.assignedCoachIds.map(id => {
+                    const c = appState.coaches.find(coach => coach.id === id);
+                    return c ? c.name : null;
+                }).filter(Boolean).join(', ');
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-brand-600 transition";
+
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="flex flex-col gap-1 items-center justify-center pt-1 text-slate-500">
+                            <button onclick="moveDrill(${index}, -1)" ${index === 0 ? 'disabled class="opacity-20"' : 'class="hover:text-gold-400"'}><i class="fa-solid fa-chevron-up"></i></button>
+                            <span class="text-xs font-bold text-slate-400">${index + 1}</span>
+                            <button onclick="moveDrill(${index}, 1)" ${index === appState.drills.length - 1 ? 'disabled class="opacity-20"' : 'class="hover:text-gold-400"'}><i class="fa-solid fa-chevron-down"></i></button>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-sm font-bold text-white">${escapeHTML(drill.name)}</h4>
+                                <span class="px-2 py-0.5 rounded text-[10px] bg-brand-800 text-purple-200 border border-brand-700">${escapeHTML(drill.category)}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-gold-400 font-mono">${drill.duration} min</span>
+                            </div>
+                            <p class="text-xs text-slate-300 mt-1">${escapeHTML(drill.notes || 'No notes.')}</p>
+                            <div class="text-[11px] text-purple-300/80 mt-1">
+                                <i class="fa-solid fa-user-shield text-gold-400 mr-1"></i> Assigned: ${coachNames || 'Unassigned'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 self-end md:self-center">
+                        <button onclick="openEditDrillModal('${drill.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition border border-slate-700">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                        </button>
+                        <button onclick="deleteDrill('${drill.id}')" class="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900 text-rose-300 text-xs font-semibold rounded-lg transition border border-rose-800/50">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /* ================= TIMER & PRACTICE EXECUTION LOGIC ================= */
+
+        function toggleTimer() {
+            if (appState.drills.length === 0) {
+                showToast("Please add drills first!", "warning");
+                return;
+            }
+
+            appState.timer.isRunning = !appState.timer.isRunning;
+
+            if (appState.timer.isRunning) {
+                timerInterval = setInterval(() => {
+                    if (appState.timer.remainingSeconds > 0) {
+                        appState.timer.remainingSeconds--;
+                        appState.timer.totalElapsedSeconds++;
+                        updateTimerDOM();
+                        
+                        // Sync tick across tabs
+                        syncChannel.postMessage({
+                            type: 'TIMER_TICK',
+                            remaining: appState.timer.remainingSeconds,
+                            elapsed: appState.timer.totalElapsedSeconds
+                        });
+                    } else {
+                        // Drill completed
+                        triggerDrillCompletionAlert();
+                    }
+                }, 1000);
+            } else {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            saveData();
+            renderTimerSection();
+        }
+
+        function triggerDrillCompletionAlert() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            appState.timer.isRunning = false;
+
+            // Mark active drill completed
+            if (appState.drills[appState.activeDrillIndex]) {
+                appState.drills[appState.activeDrillIndex].status = "Completed";
+            }
+
+            // Audio Buzzer
+            playBuzzerSound();
+            showToast(`Drill Segment Completed! Moving to next drill.`, "success");
+
+            // Auto-advance to next drill segment if available
+            if (appState.activeDrillIndex < appState.drills.length - 1) {
+                appState.activeDrillIndex++;
+                const nextDrill = appState.drills[appState.activeDrillIndex];
+                appState.timer.remainingSeconds = (nextDrill.duration || 10) * 60;
+                nextDrill.status = "In Progress";
+            }
+
+            saveData();
+            renderAllViews();
+            
+            // Push notification live update if Google Apps Script endpoint active
+            syncToGoogleSheets();
+        }
+
+        function selectActiveSegment(index) {
+            if (index < 0 || index >= appState.drills.length) return;
+            appState.activeDrillIndex = index;
+            appState.timer.remainingSeconds = (appState.drills[index].duration || 10) * 60;
+            saveData();
+            renderAllViews();
+        }
+
+        function jumpSegment(direction) {
+            const newIndex = appState.activeDrillIndex + direction;
+            if (newIndex >= 0 && newIndex < appState.drills.length) {
+                selectActiveSegment(newIndex);
+            }
+        }
+
+        function resetCurrentSegment() {
+            const activeDrill = appState.drills[appState.activeDrillIndex];
+            if (activeDrill) {
+                appState.timer.remainingSeconds = (activeDrill.duration || 10) * 60;
+                updateTimerDOM();
+                saveData();
+                showToast("Segment timer reset", "info");
+            }
+        }
+
+        /* ================= COACH ASSIGNMENTS & EDITING ================= */
+
+        function selectCoach(coachId) {
+            appState.selectedCoachId = coachId;
+            saveData();
+            renderCoachSection();
+        }
+
+        function addNewCoach() {
+            const nameInput = document.getElementById('new-coach-name');
+            const roleInput = document.getElementById('new-coach-role');
+            const name = nameInput.value.trim();
+            const role = roleInput.value.trim() || "Assistant Coach";
+
+            if (!name) {
+                showToast("Please enter a coach name.", "warning");
+                return;
+            }
+
+            const newCoach = {
+                id: 'c_' + Date.now(),
+                name: name,
+                role: role
+            };
+
+            appState.coaches.push(newCoach);
+            nameInput.value = '';
+            roleInput.value = '';
+
+            saveData();
+            renderAllViews();
+            showToast(`Added ${name} to coaching staff.`, "success");
+        }
+
+        function updateDutyStatus(status) {
+            const activeDrill = appState.drills[appState.activeDrillIndex];
+            if (activeDrill) {
+                activeDrill.status = status;
+                saveData();
+                renderAllViews();
+                showToast(`Status updated to: ${status}`, "info");
+            }
+        }
+
+        /* ================= BUILDER & DRILL MANAGEMENT ================= */
+
+        function openModal(id) {
+            if (id === 'add-drill-modal') {
+                document.getElementById('edit-drill-id').value = '';
+                document.getElementById('modal-drill-title').innerText = 'Add New Drill Segment';
+                document.getElementById('drill-form').reset();
+                renderCoachCheckboxes([]);
+            }
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function renderCoachCheckboxes(selectedIds = []) {
+            const container = document.getElementById('drill-coaches-checkboxes');
+            container.innerHTML = '';
+
+            appState.coaches.forEach(coach => {
+                const isChecked = selectedIds.includes(coach.id);
+                const label = document.createElement('label');
+                label.className = "flex items-center gap-2 text-xs text-slate-200 cursor-pointer hover:text-white";
+                label.innerHTML = `
+                    <input type="checkbox" value="${coach.id}" ${isChecked ? 'checked' : ''} class="rounded border-slate-700 text-gold-500 focus:ring-gold-400 bg-slate-900">
+                    <span>${escapeHTML(coach.name)} <span class="text-purple-300/60">(${escapeHTML(coach.role)})</span></span>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        function openEditDrillModal(drillId) {
+            const drill = appState.drills.find(d => d.id === drillId);
+            if (!drill) return;
+
+            document.getElementById('edit-drill-id').value = drill.id;
+            document.getElementById('modal-drill-title').innerText = 'Edit Drill Segment';
+            document.getElementById('drill-name-input').value = drill.name;
+            document.getElementById('drill-duration-input').value = drill.duration;
+            document.getElementById('drill-category-input').value = drill.category;
+            document.getElementById('drill-notes-input').value = drill.notes || '';
+
+            renderCoachCheckboxes(drill.assignedCoachIds || []);
+            openModal('add-drill-modal');
+        }
+
+        function saveDrill(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-drill-id').value;
+            const name = document.getElementById('drill-name-input').value.trim();
+            const duration = parseInt(document.getElementById('drill-duration-input').value) || 10;
+            const category = document.getElementById('drill-category-input').value;
+            const notes = document.getElementById('drill-notes-input').value.trim();
+
+            const checkedCoaches = Array.from(document.querySelectorAll('#drill-coaches-checkboxes input:checked')).map(cb => cb.value);
+
+            if (editId) {
+                // Update existing
+                const drillIndex = appState.drills.findIndex(d => d.id === editId);
+                if (drillIndex !== -1) {
+                    appState.drills[drillIndex] = {
+                        ...appState.drills[drillIndex],
+                        name, duration, category, notes, assignedCoachIds: checkedCoaches
+                    };
+                }
+            } else {
+                // Add new
+                const newDrill = {
+                    id: 'd_' + Date.now(),
+                    name, duration, category, notes,
+                    assignedCoachIds: checkedCoaches,
+                    status: 'Ready'
+                };
+                appState.drills.push(newDrill);
+            }
+
+            saveData();
+            renderAllViews();
+            closeModal('add-drill-modal');
+            showToast("Drill plan saved successfully!", "success");
+        }
+
+        function deleteDrill(drillId) {
+            if (appState.drills.length <= 1) {
+                showToast("Practice plan must contain at least one drill.", "warning");
+                return;
+            }
+            appState.drills = appState.drills.filter(d => d.id !== drillId);
+            if (appState.activeDrillIndex >= appState.drills.length) {
+                appState.activeDrillIndex = 0;
+            }
+            saveData();
+            renderAllViews();
+            showToast("Drill removed.", "info");
+        }
+
+        function moveDrill(index, direction) {
+            const target = index + direction;
+            if (target < 0 || target >= appState.drills.length) return;
+            
+            const temp = appState.drills[index];
+            appState.drills[index] = appState.drills[target];
+            appState.drills[target] = temp;
+
+            saveData();
+            renderAllViews();
+        }
+
+        function updatePlanMeta() {
+            appState.planMeta.title = document.getElementById('plan-title-input').value;
+            appState.planMeta.date = document.getElementById('plan-date-input').value;
+            appState.planMeta.notes = document.getElementById('plan-notes-input').value;
+            saveData();
+            document.getElementById('practice-title-display').innerText = appState.planMeta.title;
+            document.getElementById('practice-date-badge').innerText = appState.planMeta.date;
+            document.getElementById('practice-notes-display').innerText = appState.planMeta.notes;
+        }
+
+        function loadTemplate(type) {
+            if (type === 'default') {
+                appState.drills = [
+                    { id: "t1", name: "Dynamic Warmup & Stretching", duration: 10, category: "Warmup", assignedCoachIds: ["c1"], notes: "Full body mobility & arm care.", status: "Ready" },
+                    { id: "t2", name: "Inf/Of Position Breakdown", duration: 20, category: "Infield/Outfield", assignedCoachIds: ["c1", "c3"], notes: "Pop-up communication & groundball reps.", status: "Ready" },
+                    { id: "t3", name: "Live Batting Practice", duration: 25, category: "Batting Practice", assignedCoachIds: ["c3"], notes: "3 rounds of 8 pitches per batter.", status: "Ready" },
+                    { id: "t4", name: "Bullpen & Pitcher Condition", duration: 15, category: "Bullpen", assignedCoachIds: ["c2"], notes: "Flat ground mechanics & pitch tracking.", status: "Ready" }
+                ];
+                appState.activeDrillIndex = 0;
+                appState.timer.remainingSeconds = 10 * 60;
+                saveData();
+                renderAllViews();
+                showToast("Loaded standard practice preset.", "info");
+            }
+        }
+
+        function clearPlan() {
+            appState.drills = [];
+            saveData();
+            renderAllViews();
+            showToast("Plan cleared.", "warning");
+        }
+
+        /* ================= AUDIO BUZZER ================= */
+
+        let audioCtx = null;
+        function initAudioContext() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) audioCtx = new AudioContext();
+        }
+
+        function toggleAudioAlert() {
+            appState.timer.soundEnabled = !appState.timer.soundEnabled;
+            document.getElementById('audio-toggle-text').innerText = `Sound: ${appState.timer.soundEnabled ? 'ON' : 'OFF'}`;
+            saveData();
+        }
+
+        function playBuzzerSound() {
+            if (!appState.timer.soundEnabled) return;
+            try {
+                if (!audioCtx) initAudioContext();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.6); // Buzz up
+                
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.6);
+            } catch (e) {
+                console.log("Audio play deferred", e);
+            }
+        }
+
+        /* ================= EXPORT / IMPORT & GAS LIVE SYNC ================= */
+
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `DugoutSync_Plan_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast("Practice plan JSON exported!", "success");
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.drills && imported.coaches) {
+                        appState = imported;
+                        saveData();
+                        renderAllViews();
+                        closeModal('settings-modal');
+                        showToast("Plan imported successfully!", "success");
+                    } else {
+                        showToast("Invalid JSON structure.", "warning");
+                    }
+                } catch (err) {
+                    showToast("Failed to parse JSON file.", "warning");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function saveGasEndpoint() {
+            const url = document.getElementById('gas-endpoint-url').value.trim();
+            appState.timer.gasEndpoint = url;
+            saveData();
+            showToast("Google Apps Script Endpoint URL Saved!", "success");
+        }
+
+        function testSyncEndpoint() {
+            const url = appState.timer.gasEndpoint;
+            if (!url) {
+                showToast("Please enter a Web App Endpoint URL first.", "warning");
+                return;
+            }
+            showToast("Sending test heartbeat...", "info");
+            syncToGoogleSheets();
+        }
+
+        function syncToGoogleSheets() {
+            const url = appState.timer.gasEndpoint;
+            if (!url) return;
+
+            const payload = {
+                timestamp: new Date().toISOString(),
+                planTitle: appState.planMeta.title,
+                activeDrill: appState.drills[appState.activeDrillIndex]?.name || 'N/A',
+                elapsedTime: appState.timer.totalElapsedSeconds
+            };
+
+            fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                document.getElementById('sync-status').innerText = "Cloud Synced";
+            }).catch(err => {
+                console.error("Cloud sync issue", err);
+            });
+        }
+
+        /* ================= UI UTILITIES & NAVIGATION ================= */
+
+        function switchTab(tabId) {
+            ['timer', 'coach', 'builder'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                
+                // Desktop nav styles
+                const navBtn = document.getElementById(`nav-btn-${t}`);
+                if (navBtn) {
+                    navBtn.className = t === tabId
+                        ? 'px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-gradient-to-r from-gold-500 to-gold-400 text-brand-900 shadow'
+                        : 'px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-purple-200 hover:text-white hover:bg-brand-700/50';
+                }
+
+                // Mobile nav styles
+                const mobBtn = document.getElementById(`mob-nav-${t}`);
+                if (mobBtn) {
+                    mobBtn.className = t === tabId
+                        ? 'flex-1 py-3 text-center font-bold text-gold-400 border-b-2 border-gold-400'
+                        : 'flex-1 py-3 text-center font-semibold text-purple-200 border-b-2 border-transparent';
+                }
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+        }
+
+        function getStatusBadgeHTML(status) {
+            switch (status) {
+                case 'Completed':
+                    return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">DONE</span>`;
+                case 'In Progress':
+                    return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">ACTIVE</span>`;
+                default:
+                    return `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-400">READY</span>`;
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-900 border-emerald-500 text-emerald-100' :
+                            type === 'warning' ? 'bg-amber-900 border-amber-500 text-amber-100' :
+                            'bg-brand-900 border-brand-500 text-purple-100';
+
+            toast.className = `px-4 py-3 rounded-xl border ${bgClass} text-xs font-semibold shadow-2xl flex items-center gap-2 transition-all transform translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid fa-bell text-gold-400"></i> ${escapeHTML(message)}`;
+
+            const container = document.getElementById('toast-container');
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
