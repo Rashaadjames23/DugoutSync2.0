@@ -214,10 +214,30 @@
                     <p class="text-xs text-slate-300">Select your name below to view your specific assignments and duties for each segment of practice.</p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     <select id="coach-select" onchange="selectCoach(this.value)" class="bg-slate-950 border border-brand-600 text-gold-400 font-bold text-base rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-gold-400 w-full md:w-64">
                     </select>
+                    <button onclick="toggleCoachFocusView()" id="focus-view-toggle-btn" class="px-4 py-2.5 bg-brand-800 hover:bg-brand-700 text-purple-200 text-xs font-bold rounded-xl border border-brand-600 transition flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-eye text-gold-400" id="focus-icon"></i>
+                        <span id="focus-btn-text">Coach Focus: OFF</span>
+                    </button>
                 </div>
+            </div>
+
+            <!-- COACH FOCUS VIEW BANNER (Conditional) -->
+            <div id="coach-focus-banner" class="hidden bg-gradient-to-r from-amber-950/80 via-brand-900 to-slate-900 border-2 border-gold-500/60 rounded-2xl p-4 shadow-2xl flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gold-500 text-brand-900 flex items-center justify-center font-black text-lg">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black text-gold-400">Coach Focus Mode Active</h4>
+                        <p class="text-xs text-slate-300">Displaying only your assigned drills and confidential task notes. Other coaches' notes are hidden.</p>
+                    </div>
+                </div>
+                <button onclick="toggleCoachFocusView()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg border border-slate-700">
+                    Exit Focus View
+                </button>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -264,9 +284,12 @@
                 </div>
 
                 <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2 border-b border-slate-800 pb-3">
-                        <i class="fa-solid fa-timeline text-gold-400"></i>
-                        Full Practice Duty Timeline for <span id="timeline-coach-name" class="text-gold-400">Coach Rashaad</span>
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-timeline text-gold-400"></i>
+                            Practice Duty Timeline for <span id="timeline-coach-name" class="text-gold-400">Coach Rashaad</span>
+                        </span>
+                        <span id="timeline-filter-indicator" class="text-xs text-purple-300 font-normal">Showing All Drills</span>
                     </h3>
 
                     <div id="coach-timeline-container" class="space-y-4"></div>
@@ -347,7 +370,7 @@
 
     <!-- Add / Edit Drill Modal -->
     <div id="add-drill-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-brand-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative space-y-4">
+        <div class="bg-slate-900 border border-brand-700 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 id="modal-drill-title" class="text-lg font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-stopwatch text-gold-400"></i> Add New Drill Segment
@@ -387,8 +410,14 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-purple-200 mb-1">Detailed Coach Responsibilities / Notes</label>
-                    <textarea id="drill-notes-input" rows="3" placeholder="Specify instructions for each coach during this drill..." class="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:border-gold-400 outline-none"></textarea>
+                    <label class="block font-semibold text-purple-200 mb-1">General Drill Notes (Optional)</label>
+                    <textarea id="drill-notes-input" rows="2" placeholder="General objective for this drill segment..." class="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:border-gold-400 outline-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gold-400 mb-1">Coach-Specific Task Assignments & Notes</label>
+                    <p class="text-[11px] text-slate-400 mb-2">Provide tailored instructions for each assigned coach. In Coach Focus View, each coach will only see their own assigned note.</p>
+                    <div id="drill-coach-notes-container" class="space-y-3 bg-slate-950 p-3 rounded-lg border border-slate-800"></div>
                 </div>
 
                 <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-800">
@@ -476,6 +505,10 @@
                     category: "Warmup",
                     assignedCoachIds: ["c1", "c3"],
                     notes: "Lead outfielders & infielders in dynamic stretching. Monitor throwing mechanics from 60 ft to 120 ft cutoff position.",
+                    coachNotes: {
+                        "c1": "Lead infielders in dynamic stretching and arm care routine.",
+                        "c3": "Monitor outfield throwing form from 90 ft distance."
+                    },
                     status: "Completed"
                 },
                 {
@@ -485,6 +518,10 @@
                     category: "Infield/Outfield",
                     assignedCoachIds: ["c1", "c2"],
                     notes: "Coach Rashaad hits grounders to 2B/SS. Coach Alex handles cutoff positioning from deep right center.",
+                    coachNotes: {
+                        "c1": "Hit sharp grounders to 2B/SS. Emphasize quick double play feeds.",
+                        "c2": "Handle cutoff positioning from deep right center relay throws."
+                    },
                     status: "In Progress"
                 },
                 {
@@ -494,6 +531,9 @@
                     category: "Batting Practice",
                     assignedCoachIds: ["c3"],
                     notes: "Group A in cage 1 for directional bunting. Group B on main field taking 10-pitch live BP rounds.",
+                    coachNotes: {
+                        "c3": "Run cage 1 directional bunting and oversee main field live BP rounds."
+                    },
                     status: "Ready"
                 },
                 {
@@ -503,10 +543,14 @@
                     category: "Bullpen",
                     assignedCoachIds: ["c2"],
                     notes: "Coach Alex tracks pitch counts and fast-ball command for starter group (25 pitches max per pitcher).",
+                    coachNotes: {
+                        "c2": "Track pitch counts and fastball command for starter group (25 max per pitcher)."
+                    },
                     status: "Ready"
                 }
             ],
             selectedCoachId: "c1",
+            coachFocusMode: false,
             activeDrillIndex: 1,
             timer: {
                 isRunning: false,
@@ -702,12 +746,35 @@
             const initials = currentCoach.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
             document.getElementById('selected-coach-initials').innerText = initials || 'CO';
 
+            // Focus View UI Toggle state
+            const banner = document.getElementById('coach-focus-banner');
+            const focusBtnText = document.getElementById('focus-btn-text');
+            const focusIcon = document.getElementById('focus-icon');
+            const focusIndicator = document.getElementById('timeline-filter-indicator');
+
+            if (appState.coachFocusMode) {
+                banner.classList.remove('hidden');
+                focusBtnText.innerText = 'Coach Focus: ON';
+                focusBtnText.className = 'text-gold-400';
+                focusIcon.className = 'fa-solid fa-lock text-gold-400';
+                focusIndicator.innerText = 'Filtered (Focus Mode ON)';
+            } else {
+                banner.classList.add('hidden');
+                focusBtnText.innerText = 'Coach Focus: OFF';
+                focusBtnText.className = 'text-purple-200';
+                focusIcon.className = 'fa-solid fa-eye text-gold-400';
+                focusIndicator.innerText = 'Showing All Drills';
+            }
+
             const activeDrill = appState.drills[appState.activeDrillIndex];
             if (activeDrill) {
                 const isAssigned = activeDrill.assignedCoachIds.includes(currentCoach.id);
                 document.getElementById('duty-active-title').innerText = activeDrill.name;
+                
+                // Retrieve coach-specific note if available, otherwise general notes if assigned
+                const specificNote = activeDrill.coachNotes && activeDrill.coachNotes[currentCoach.id];
                 document.getElementById('duty-active-desc').innerText = isAssigned 
-                    ? activeDrill.notes || "Assigned lead role for this drill segment."
+                    ? (specificNote || activeDrill.notes || "Assigned lead role for this drill segment.")
                     : "No primary assignment for this active segment. Available for floating assistance.";
                 
                 document.getElementById('duty-status-badge').innerText = isAssigned ? "ASSIGNED NOW" : "SUPPORT ROLE";
@@ -718,12 +785,37 @@
             const timelineContainer = document.getElementById('coach-timeline-container');
             timelineContainer.innerHTML = '';
 
+            // Filter drills if Coach Focus Mode is active
+            const drillsToDisplay = appState.coachFocusMode 
+                ? appState.drills.map((drill, idx) => ({ drill, idx })).filter(({ drill }) => drill.assignedCoachIds.includes(currentCoach.id))
+                : appState.drills.map((drill, idx) => ({ drill, idx }));
+
+            if (drillsToDisplay.length === 0) {
+                timelineContainer.innerHTML = `
+                    <div class="text-center py-10 text-slate-400 border border-dashed border-slate-800 rounded-xl">
+                        <i class="fa-solid fa-calendar-xmark text-2xl mb-2 text-slate-600 block"></i>
+                        No drills currently assigned to ${escapeHTML(currentCoach.name)}.
+                    </div>`;
+            }
+
             appState.drills.forEach((drill, idx) => {
                 const isAssigned = drill.assignedCoachIds.includes(currentCoach.id);
                 if (isAssigned) {
                     assignedCount++;
                     assignedTime += parseInt(drill.duration) || 0;
                 }
+            });
+
+            document.getElementById('coach-total-drills-count').innerText = `${assignedCount} Drills`;
+            document.getElementById('coach-total-time').innerText = `${assignedTime} mins`;
+
+            drillsToDisplay.forEach(({ drill, idx }) => {
+                const isAssigned = drill.assignedCoachIds.includes(currentCoach.id);
+                const specificNote = drill.coachNotes && drill.coachNotes[currentCoach.id];
+                // In Focus View, hide general notes and show ONLY the coach's specific task note
+                const displayedNote = appState.coachFocusMode 
+                    ? (specificNote || "No specific task instructions assigned for this drill.")
+                    : (specificNote ? `Your Task: ${specificNote}` : (drill.notes || 'No extra notes.'));
 
                 const item = document.createElement('div');
                 item.className = `p-4 rounded-xl border transition ${
@@ -740,7 +832,7 @@
                             </span>
                             <div>
                                 <h4 class="text-sm font-bold text-white">${escapeHTML(drill.name)} (${drill.duration} min)</h4>
-                                <p class="text-xs text-purple-200 mt-1">${escapeHTML(drill.notes || 'No extra notes.')}</p>
+                                <p class="text-xs text-purple-200 mt-1 leading-relaxed">${escapeHTML(displayedNote)}</p>
                             </div>
                         </div>
                         <div class="text-right shrink-0">
@@ -753,9 +845,13 @@
                 `;
                 timelineContainer.appendChild(item);
             });
+        }
 
-            document.getElementById('coach-total-drills-count').innerText = `${assignedCount} Drills`;
-            document.getElementById('coach-total-time').innerText = `${assignedTime} mins`;
+        function toggleCoachFocusView() {
+            appState.coachFocusMode = !appState.coachFocusMode;
+            saveData();
+            renderCoachSection();
+            showToast(appState.coachFocusMode ? "Coach Focus Mode Enabled" : "Coach Focus Mode Disabled", "info");
         }
 
         function renderBuilderList() {
@@ -956,6 +1052,7 @@
             document.getElementById('drill-submit-btn').innerText = 'Add Drill';
             document.getElementById('drill-form').reset();
             renderCoachCheckboxes([]);
+            renderCoachTaskInputs({});
             openModal('add-drill-modal');
         }
 
@@ -973,6 +1070,7 @@
             document.getElementById('drill-notes-input').value = drill.notes || '';
 
             renderCoachCheckboxes(drill.assignedCoachIds || []);
+            renderCoachTaskInputs(drill.coachNotes || {});
             openModal('add-drill-modal');
         }
 
@@ -985,11 +1083,32 @@
                 const label = document.createElement('label');
                 label.className = "flex items-center gap-2 text-xs text-slate-200 cursor-pointer hover:text-white";
                 label.innerHTML = `
-                    <input type="checkbox" value="${coach.id}" ${isChecked ? 'checked' : ''} class="rounded border-slate-700 text-gold-500 focus:ring-gold-400 bg-slate-900">
+                    <input type="checkbox" value="${coach.id}" ${isChecked ? 'checked' : ''} onchange="updateCoachTaskInputsVisibility()" class="rounded border-slate-700 text-gold-500 focus:ring-gold-400 bg-slate-900">
                     <span>${escapeHTML(coach.name)} <span class="text-purple-300/60">(${escapeHTML(coach.role)})</span></span>
                 `;
                 container.appendChild(label);
             });
+        }
+
+        function renderCoachTaskInputs(existingNotes = {}) {
+            const container = document.getElementById('drill-coach-notes-container');
+            container.innerHTML = '';
+
+            appState.coaches.forEach(coach => {
+                const noteVal = existingNotes[coach.id] || '';
+                const div = document.createElement('div');
+                div.className = "coach-task-input-group space-y-1";
+                div.dataset.coachId = coach.id;
+                div.innerHTML = `
+                    <label class="block text-[11px] font-bold text-gold-400">Task for ${escapeHTML(coach.name)}:</label>
+                    <input type="text" data-coach-task-id="${coach.id}" value="${escapeHTML(noteVal)}" placeholder="Specific assignment for ${escapeHTML(coach.name)}..." class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-gold-400">
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateCoachTaskInputsVisibility() {
+            // Dynamic helper if needed
         }
 
         function saveDrill(e) {
@@ -1001,6 +1120,14 @@
             const notes = document.getElementById('drill-notes-input').value.trim();
 
             const checkedCoaches = Array.from(document.querySelectorAll('#drill-coaches-checkboxes input:checked')).map(cb => cb.value);
+            
+            const coachNotes = {};
+            appState.coaches.forEach(coach => {
+                const inputEl = document.querySelector(`input[data-coach-task-id="${coach.id}"]`);
+                if (inputEl && inputEl.value.trim()) {
+                    coachNotes[coach.id] = inputEl.value.trim();
+                }
+            });
 
             if (editId) {
                 // UPDATE EXISTING DRILL IN PLACE
@@ -1012,7 +1139,8 @@
                         duration,
                         category,
                         notes,
-                        assignedCoachIds: checkedCoaches
+                        assignedCoachIds: checkedCoaches,
+                        coachNotes
                     };
                     showToast("Drill updated successfully!", "success");
                 }
@@ -1025,6 +1153,7 @@
                     category,
                     notes,
                     assignedCoachIds: checkedCoaches,
+                    coachNotes,
                     status: 'Ready'
                 };
                 appState.drills.push(newDrill);
